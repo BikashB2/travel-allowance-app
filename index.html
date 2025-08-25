@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Allowance</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 10px; background: #f2f2f2; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 15px; border-radius: 10px; }
+    h2 { text-align: center; }
+    input, button { width: 100%; padding: 8px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+    button { cursor: pointer; }
+    #addBtn { background: blue; color: white; font-weight: bold; }
+    #saveBtn { background: green; color: white; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+    th { background: #eee; }
+    .deleteBtn { background: red; color: white; border: none; padding: 5px; border-radius: 5px; }
+  </style>
+</head>
+<body onload="loadDataFromLocal()">
+  <div class="container">
+    <h2>Travel Allowance</h2>
+    <input type="date" id="date">
+    <input type="text" id="from" placeholder="From">
+    <input type="text" id="to" placeholder="To">
+    <input type="text" id="purpose" placeholder="Purpose">
+    <input type="number" id="lunch" placeholder="Lunch">
+    <input type="number" id="km" placeholder="KM">
+    <input type="text" id="callid" placeholder="Call ID">
+    <input type="number" id="advance" placeholder="Advance">
+
+    <button id="addBtn" onclick="addEntry()">Add Entry</button>
+
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Date</th><th>From</th><th>To</th><th>Purpose</th>
+          <th>Lunch</th><th>K.M</th><th>Call ID</th><th>Advance</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4">TOTAL</th>
+          <th id="totalLunch">0</th>
+          <th id="totalKm">0</th>
+          <th></th>
+          <th id="totalAdvance">0</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+
+    <button id="saveBtn" onclick="saveExcel()">📂 Save to Excel</button>
+  </div>
+
+  <script>
+    function addEntry() {
+      let date = document.getElementById("date").value;
+      let from = document.getElementById("from").value;
+      let to = document.getElementById("to").value;
+      let purpose = document.getElementById("purpose").value;
+      let lunch = parseInt(document.getElementById("lunch").value) || 0;
+      let km = parseInt(document.getElementById("km").value) || 0;
+      let callid = document.getElementById("callid").value;
+      let advance = parseInt(document.getElementById("advance").value) || 0;
+
+      if (!date || !from || !to || !purpose) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      let table = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      let newRow = table.insertRow();
+
+      newRow.insertCell(0).innerText = date;
+      newRow.insertCell(1).innerText = from;
+      newRow.insertCell(2).innerText = to;
+      newRow.insertCell(3).innerText = purpose;
+      newRow.insertCell(4).innerText = lunch;
+      newRow.insertCell(5).innerText = km;
+      newRow.insertCell(6).innerText = callid;
+      newRow.insertCell(7).innerText = advance;
+      newRow.insertCell(8).innerHTML = `<button class='deleteBtn' onclick="deleteRow(this)">❌</button>`;
+
+      updateTotals();
+      saveDataToLocal(); // 🔹 Auto Save
+    }
+
+    function deleteRow(button) {
+      let row = button.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+      updateTotals();
+      saveDataToLocal(); // 🔹 Auto Save
+    }
+
+    function updateTotals() {
+      let rows = document.getElementById("dataTable").getElementsByTagName("tbody")[0].rows;
+      let totalLunch = 0, totalKm = 0, totalAdvance = 0;
+
+      for (let i = 0; i < rows.length; i++) {
+        totalLunch += parseInt(rows[i].cells[4].innerText) || 0;
+        totalKm += parseInt(rows[i].cells[5].innerText) || 0;
+        totalAdvance += parseInt(rows[i].cells[7].innerText) || 0;
+      }
+
+      document.getElementById("totalLunch").innerText = totalLunch;
+      document.getElementById("totalKm").innerText = totalKm;
+      document.getElementById("totalAdvance").innerText = totalAdvance;
+    }
+
+    function saveDataToLocal() {
+      let table = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      let rows = table.rows;
+      let data = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        let row = [];
+        for (let j = 0; j < 8; j++) {
+          row.push(rows[i].cells[j].innerText);
+        }
+        data.push(row);
+      }
+      localStorage.setItem("travelData", JSON.stringify(data));
+    }
+
+    function loadDataFromLocal() {
+      let savedData = JSON.parse(localStorage.getItem("travelData")) || [];
+      let table = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      for (let i = 0; i < savedData.length; i++) {
+        let newRow = table.insertRow();
+        for (let j = 0; j < savedData[i].length; j++) {
+          newRow.insertCell(j).innerText = savedData[i][j];
+        }
+        newRow.insertCell(8).innerHTML = `<button class='deleteBtn' onclick="deleteRow(this)">❌</button>`;
+      }
+      updateTotals();
+    }
+
+    function saveExcel() {
+      let table = document.getElementById("dataTable");
+      let wb = XLSX.utils.table_to_book(table, {sheet: "Travel"});
+      XLSX.writeFile(wb, "Travel_Allowance.xlsx");
+    }
+  </script>
+</body>
+</html>
