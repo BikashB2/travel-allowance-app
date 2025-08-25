@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Allowance of Sonatech Engineer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 900px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .form-group {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #f8f8f8;
+    }
+    .delete-btn {
+      background: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .export-btn {
+      margin-top: 15px;
+      padding: 10px;
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Travel Allowance of Sonatech Engineer</h2>
+
+    <!-- Input Form -->
+    <div class="form-group">
+      <input type="date" id="date">
+      <input type="text" id="from" placeholder="From">
+      <input type="text" id="to" placeholder="To">
+      <input type="text" id="purpose" placeholder="Purpose to Visit">
+      <input type="number" id="lunch" placeholder="Lunch (₹)" value="0">
+      <input type="number" id="km" placeholder="K.M" value="0">
+      <input type="text" id="callid" placeholder="Call ID">
+      <input type="number" id="advance" placeholder="Advance (₹)" value="0">
+      <button onclick="addRow()">Add</button>
+    </div>
+
+    <!-- Table -->
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Purpose</th>
+          <th>Lunch</th>
+          <th>K.M</th>
+          <th>Call ID</th>
+          <th>Advance</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4">TOTAL</th>
+          <th id="totalLunch">0</th>
+          <th id="totalKm">0</th>
+          <th></th>
+          <th id="totalAdvance">0</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Export Button -->
+    <button class="export-btn" onclick="exportToExcel()">Export to Excel</button>
+  </div>
+
+  <script>
+    function addRow() {
+      const date = document.getElementById("date").value || "-";
+      const from = document.getElementById("from").value || "-";
+      const to = document.getElementById("to").value || "-";
+      const purpose = document.getElementById("purpose").value || "-";
+      const lunch = parseInt(document.getElementById("lunch").value) || 0;
+      const km = parseInt(document.getElementById("km").value) || 0;
+      const callid = document.getElementById("callid").value || "-";
+      const advance = parseInt(document.getElementById("advance").value) || 0;
+
+      const table = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      const newRow = table.insertRow();
+
+      newRow.innerHTML = `
+        <td>${date}</td>
+        <td>${from}</td>
+        <td>${to}</td>
+        <td>${purpose}</td>
+        <td>${lunch}</td>
+        <td>${km}</td>
+        <td>${callid}</td>
+        <td>${advance}</td>
+        <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+      `;
+
+      updateTotals();
+    }
+
+    function deleteRow(button) {
+      const row = button.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+      updateTotals();
+    }
+
+    function updateTotals() {
+      let totalLunch = 0, totalKm = 0, totalAdvance = 0;
+      const rows = document.querySelectorAll("#dataTable tbody tr");
+
+      rows.forEach(row => {
+        totalLunch += parseInt(row.cells[4].innerText) || 0;
+        totalKm += parseInt(row.cells[5].innerText) || 0;
+        totalAdvance += parseInt(row.cells[7].innerText) || 0;
+      });
+
+      document.getElementById("totalLunch").innerText = totalLunch;
+      document.getElementById("totalKm").innerText = totalKm;
+      document.getElementById("totalAdvance").innerText = totalAdvance;
+    }
+
+    function exportToExcel() {
+      const table = document.getElementById("dataTable");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Travel Allowance" });
+      XLSX.writeFile(wb, "Travel_Allowance.xlsx");
+    }
+  </script>
+</body>
+</html>
+
